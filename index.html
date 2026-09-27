@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KASU Keke</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --indigo-900: #1B1F3B; --yellow: #F5B700; --yellow-dim: #FFD866; --sand: #F6F3EC;
+    --ink: #1A1A1A; --ink-soft: #55586e; --line: #E4E0D4; --card-bg: #FFFFFF;
+    --success: #1E7B4D; --warn: #B8860B; --blue: #2255CC;
+    box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --sand:#14162A; --ink:#F0EFE9; --ink-soft:#A9ACC4; --card-bg:#1F2242; --line:#33375E; --indigo-900:#10122A; }
+  }
+  :root[data-theme="dark"] { --sand:#14162A; --ink:#F0EFE9; --ink-soft:#A9ACC4; --card-bg:#1F2242; --line:#33375E; --indigo-900:#10122A; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background: var(--sand); color: var(--ink); font-family:'IBM Plex Sans', system-ui, sans-serif; min-height:100%; display:flex; justify-content:center; }
+  .screen { width:100%; max-width:480px; min-height:100vh; display:flex; flex-direction:column; }
+  header { background: var(--indigo-900); color:#fff; padding:18px 20px 16px; padding-top:calc(18px + env(safe-area-inset-top,0px)); position:relative; overflow:hidden; }
+  header .tag { font-family:'Space Grotesk', sans-serif; font-size:12px; color:var(--yellow-dim); }
+  header h1 { font-family:'Space Grotesk', sans-serif; font-size:24px; font-weight:700; margin-top:2px; }
+  header .rickshaw { position:absolute; right:-10px; bottom:-18px; font-size:80px; opacity:0.14; transform:rotate(-6deg); }
+  .tabs { display:flex; gap:6px; margin-top:14px; background:rgba(255,255,255,0.08); border-radius:11px; padding:4px; position:relative; z-index:1; }
+  .tab { flex:1; text-align:center; padding:9px 0; border:none; background:transparent; color:rgba(255,255,255,0.65); font:inherit; font-weight:600; font-size:12.5px; border-radius:8px; cursor:pointer; }
+  .tab.active { background: var(--yellow); color: var(--indigo-900); }
+  main { flex:1; padding:18px 18px 110px; }
+  .hidden { display:none !important; }
+  .demo-flag { display:inline-block; font-size:10.5px; font-weight:600; letter-spacing:0.03em; background:rgba(34,85,204,0.12); color:var(--blue); padding:3px 8px; border-radius:6px; margin-bottom:12px; }
+  .route-strip { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+  .route-chip { font-size:11px; font-weight:600; background:var(--card-bg); border:1px solid var(--line); border-radius:20px; padding:5px 10px; }
+  .section-title { font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:500; color:var(--ink-soft); margin:18px 0 10px; }
+  .card { background:var(--card-bg); border:1px solid var(--line); border-radius:14px; padding:14px 16px; box-shadow:0 6px 18px rgba(27,31,59,0.08); }
+  .journey-picker { display:flex; flex-direction:column; gap:12px; }
+  .journey-picker label { font-size:11.5px; color:var(--ink-soft); font-weight:600; display:block; margin-bottom:4px; }
+  select { width:100%; font:inherit; font-size:14.5px; padding:12px; border-radius:10px; border:1.5px solid var(--line); background:var(--card-bg); color:var(--ink); }
+  .trip-info { margin-top:16px; background:var(--indigo-900); color:#fff; border-radius:16px; padding:16px 18px; display:none; }
+  .trip-info.show { display:block; }
+  .trip-info .row { display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; }
+  .trip-info .row + .row { border-top:1px solid rgba(255,255,255,0.12); }
+  .trip-info .k { font-size:13px; color:rgba(255,255,255,0.65); }
+  .trip-info .v { font-size:14px; font-weight:600; }
+  .trip-info .fare-row .v { font-family:'Space Grotesk', sans-serif; font-size:22px; color:var(--yellow); }
+  .trip-info .note { margin-top:8px; font-size:11px; color:rgba(255,255,255,0.55); line-height:1.4; }
+  .cta-wrap { position:fixed; bottom:0; left:0; right:0; display:flex; justify-content:center; padding:14px 18px calc(16px + env(safe-area-inset-bottom,0px)); background:linear-gradient(180deg, transparent, var(--sand) 30%); }
+  .cta-inner { width:100%; max-width:480px; }
+  button.cta { width:100%; background:var(--yellow); color:var(--indigo-900); border:none; border-radius:14px; padding:16px; font-family:'Space Grotesk', sans-serif; font-size:16px; font-weight:700; cursor:pointer; }
+  button.cta:disabled { opacity:0.45; cursor:not-allowed; }
+  button.cta.ghost { background:transparent; border:1.5px solid rgba(255,60,60,0.5); color:#C0392B; }
+  .confirm-overlay { position:fixed; inset:0; background:rgba(16,18,42,0.55); display:none; align-items:flex-end; justify-content:center; z-index:10; }
+  .confirm-overlay.show { display:flex; }
+  .confirm-sheet { width:100%; max-width:480px; background:var(--card-bg); border-radius:22px 22px 0 0; padding:22px 20px calc(26px + env(safe-area-inset-bottom,0px)); }
+  .confirm-sheet .badge { width:46px; height:46px; border-radius:50%; background:rgba(30,123,77,0.12); color:var(--success); display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:12px; }
+  .confirm-sheet h2 { font-family:'Space Grotesk', sans-serif; font-size:19px; }
+  .confirm-sheet p.sub { color:var(--ink-soft); font-size:13.5px; margin-top:4px; }
+  .confirm-sheet .fare-diff { margin-top:12px; font-size:13px; }
+  .confirm-sheet .fare-diff div { display:flex; justify-content:space-between; padding:4px 0; border-top:1px solid var(--line); }
+  .confirm-sheet button.close { margin-top:18px; width:100%; background:var(--yellow); border:none; color:var(--indigo-900); border-radius:12px; padding:13px; font:inherit; font-weight:700; cursor:pointer; }
+  .confirm-sheet button.ghost2 { margin-top:8px; width:100%; background:transparent; border:1.5px solid var(--line); color:var(--ink); border-radius:12px; padding:12px; font:inherit; font-weight:600; cursor:pointer; }
+  .trip-card { background:var(--card-bg); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:0 6px 18px rgba(27,31,59,0.08); }
+  .trip-card .route-line { font-weight:600; font-size:15.5px; }
+  .trip-card .route-sub { font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+  .status-badge { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; padding:6px 11px; border-radius:20px; margin-top:14px; }
+  .status-badge .pulse { width:7px; height:7px; border-radius:50%; }
+  .status-waiting { background:rgba(184,134,11,0.12); color:var(--warn); }
+  .status-waiting .pulse { background:var(--warn); animation:blink 1.2s infinite; }
+  .status-full { background:rgba(34,85,204,0.12); color:var(--blue); }
+  .status-ready { background:rgba(30,123,77,0.12); color:var(--success); }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+  .my-fare-row { display:flex; justify-content:space-between; margin-top:14px; font-size:13px; }
+  .my-fare-row .v { font-weight:700; }
+  .share-note { font-size:12px; color:var(--ink-soft); margin-top:10px; }
+  .trip-summary { display:none; margin-top:14px; background:rgba(30,123,77,0.08); border-radius:12px; padding:12px 14px; font-size:12.5px; }
+  .trip-summary.show { display:block; }
+  .trip-summary .row { display:flex; justify-content:space-between; padding:3px 0; }
+  .driver-banner, .admin-banner { background:rgba(34,85,204,0.1); color:var(--blue); font-size:12px; font-weight:600; padding:10px 14px; border-radius:10px; margin-bottom:16px; }
+  .stop-card { background:var(--card-bg); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px; }
+  .stop-card .stop-head { display:flex; justify-content:space-between; align-items:center; font-weight:600; font-size:14px; }
+  .stop-card .seats-note { font-size:11px; color:var(--ink-soft); font-weight:500; }
+  .pax-row { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px solid var(--line); }
+  .pax-row:first-child { border-top:none; }
+  .pax-sub { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin-top:8px; }
+  .pax-info { flex:1; min-width:0; }
+  .pax-name { font-weight:600; font-size:13.5px; }
+  .pax-route { font-size:12px; color:var(--ink-soft); margin-top:1px; }
+  .pax-status { font-size:11px; font-weight:600; margin-top:4px; }
+  .pax-status.waiting { color:var(--warn); }
+  .pax-status.onboard { color:var(--blue); }
+  .pax-status.dropped { color:var(--success); }
+  .pax-actions { display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
+  .mini-btn { font:inherit; font-size:11px; font-weight:700; border:none; border-radius:8px; padding:6px 10px; cursor:pointer; white-space:nowrap; }
+  .mini-btn.pick { background:var(--yellow); color:var(--indigo-900); }
+  .mini-btn.drop { background:var(--success); color:#fff; }
+  .mini-btn.cancel { background:transparent; border:1px solid rgba(192,57,43,0.5); color:#C0392B; }
+  .empty-note { font-size:12px; color:var(--ink-soft); padding:4px 0; }
+  #completeTripBtn { margin-top:6px; }
+  .fare-row-admin { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-top:1px solid var(--line); }
+  .fare-row-admin:first-child { border-top:none; }
+  .fare-row-admin .seg { font-size:13px; font-weight:600; }
+  .fare-row-admin .seg-sub { font-size:11px; color:var(--ink-soft); font-weight:400; }
+  .fare-input-wrap { display:flex; align-items:center; gap:4px; }
+  .fare-input-wrap span { font-weight:700; }
+  .fare-input-wrap input { width:64px; font:inherit; font-size:14px; padding:8px; border-radius:8px; border:1.5px solid var(--line); background:var(--sand); color:var(--ink); text-align:right; }
+  .effective-note { font-size:11.5px; color:var(--ink-soft); margin-top:14px; }
+  .effective-note b { color:var(--success); }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <header>
+    <div class="tag">Shared Keke &middot; Kaduna State University</div>
+    <h1>KASU Keke</h1>
+    <div class="tabs">
+      <button class="tab active" id="tabPassenger">Passenger</button>
+      <button class="tab" id="tabDriver">Driver</button>
+      <button class="tab" id="tabAdmin">Admin</button>
+    </div>
+    <div class="rickshaw">🛺</div>
+  </header>
+
+  <main>
+    <!-- PASSENGER: booking state -->
+    <div id="bookingView">
+      <span class="demo-flag">DEMO ROUTE &amp; SAMPLE STOPS — illustrative only</span>
+      <div class="route-strip" id="routeStrip"></div>
+      <div class="card">
+        <div class="journey-picker">
+          <label>Board at<select id="pickupSelect"></select></label>
+          <label>Drop off at<select id="dropSelect"></select></label>
+        </div>
+      </div>
+      <div class="trip-info" id="tripInfo">
+        <div class="row"><span class="k">Seats available</span><span class="v" id="infoSeats">—</span></div>
+        <div class="row"><span class="k">Est. travel time</span><span class="v" id="infoTime">—</span></div>
+        <div class="row fare-row"><span class="k">Fare</span><span class="v" id="infoFare">—</span></div>
+        <div class="note">Sample fare for development &middot; final price may vary. Not an official KASU fare.</div>
+      </div>
+    </div>
+
+    <!-- PASSENGER: your own booking status -->
+    <div id="tripView" class="hidden">
+      <span class="demo-flag">DEMO DATA — simulated passengers</span>
+      <div class="trip-card">
+        <div class="route-line" id="tvRoute">—</div>
+        <div class="route-sub" id="tvPickup">—</div>
+        <div class="status-badge" id="statusBadge"><span class="pulse"></span><span id="statusText">Waiting for pickup</span></div>
+        <div class="my-fare-row"><span class="k">Your fare</span><span class="v" id="myFare">—</span></div>
+        <div class="share-note" id="shareNote">—</div>
+        <div class="trip-summary" id="tripSummary">
+          <div class="row"><span>Dropped off at</span><span id="sumDest">—</span></div>
+          <div class="row"><span>Ride time</span><span id="sumTime">—</span></div>
+          <div class="row"><span>Fare paid</span><span id="sumFare">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRIVER view -->
+    <div id="driverView" class="hidden">
+      <div class="driver-banner">Demo driver screen — no real GPS, live driver link, or payments</div>
+      <div class="status-badge" id="dvStatusBadge" style="margin-bottom:12px;"><span class="pulse"></span><span id="dvStatusText">Waiting for passengers</span></div>
+      <div id="stopList"></div>
+      <button class="cta" id="completeTripBtn" disabled>Complete trip</button>
+    </div>
+
+    <!-- ADMIN view -->
+    <div id="adminView" class="hidden">
+      <div class="admin-banner">Admin only &middot; drivers cannot change fares here</div>
+      <span class="demo-flag">SAMPLE FARES — not real KASU prices</span>
+      <div class="card" id="fareList"></div>
+      <button class="cta" id="saveFaresBtn" style="margin-top:14px;">Save fares</button>
+      <div class="effective-note" id="effectiveNote">No changes saved yet.</div>
+    </div>
+  </main>
+
+  <div class="cta-wrap">
+    <div class="cta-inner" id="ctaInner"></div>
+  </div>
+
+  <div class="confirm-overlay" id="overlay">
+    <div class="confirm-sheet">
+      <div class="badge">✓</div>
+      <h2>Ride requested</h2>
+      <p class="sub">We'll match you with other passengers heading the same way.</p>
+      <button class="close" id="closeSheet">See trip status</button>
+    </div>
+  </div>
+
+  <div class="confirm-overlay" id="fareOverlay">
+    <div class="confirm-sheet">
+      <div class="badge">₦</div>
+      <h2>Confirm fare update</h2>
+      <p class="sub">These section fares will take effect immediately for new bookings.</p>
+      <div class="fare-diff" id="fareDiff"></div>
+      <button class="close" id="confirmFareBtn">Confirm &amp; save</button>
+      <button class="ghost2" id="cancelFareBtn">Go back</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const stops = ['KASU Main Gate', 'Refinery Junction', 'Stadium Roundabout / Kigo Road', 'Kano Road', 'Taiwo Road / Cooperative'];
+  let sectionFares = [80, 70, 60, 90];       // ₦ per section, admin-editable demo values
+  const sectionTimes = [6, 5, 4, 6];         // minutes per section, demo estimate
+  let effectiveDate = null;
+  const MAX_SEATS = 3;
+  const demoNames = ['Aisha B.', 'Chinedu O.', 'Musa Y.'];
+
+  let bookings = [];     // {id,name,you,pickupIdx,dropIdx,fare,time,status}
+  let idCounter = 1;
+  let myBookingId = null;
+  let currentTab = 'passenger';
+  let simTimer = null;
+  let tripCompleted = false;
+  let pendingFares = null;
+
+  const routeStrip = document.getElementById('routeStrip');
+  const pickupSelect = document.getElementById('pickupSelect');
+  const dropSelect = document.getElementById('dropSelect');
+  const tripInfo = document.getElementById('tripInfo');
+  const ctaInner = document.getElementById('ctaInner');
+  const ctaWrap = document.querySelector('.cta-wrap');
+  const bookingView = document.getElementById('bookingView');
+  const tripView = document.getElementById('tripView');
+  const driverView = document.getElementById('driverView');
+  const adminView = document.getElementById('adminView');
+
+  function myBooking() { return bookings.find(b => b.id === myBookingId); }
+  function fareBetween(p, d) { let s = 0; for (let i = p; i < d; i++) s += sectionFares[i]; return s; }
+  function timeBetween(p, d) { let s = 0; for (let i = p; i < d; i++) s += sectionTimes[i]; return s; }
+  function seatsFreeForSection(sec) {
+    const used = bookings.filter(b => (b.status === 'waiting' || b.status === 'onboard') && b.pickupIdx <= sec && b.dropIdx > sec).length;
+    return MAX_SEATS - used;
+  }
+  function minFreeSeats(p, d) { let m = MAX_SEATS; for (let i = p; i < d; i++) m = Math.min(m, seatsFreeForSection(i)); return m; }
+
+  function renderRouteStrip() {
+    routeStrip.innerHTML = stops.map(s => `<span class="route-chip">${s}</span>`).join('<span class="route-chip">→</span>');
+  }
+
+  function fillPickupSelect() {
+    pickupSelect.innerHTML = stops.slice(0, -1).map((s, i) => `<option value="${i}">${s}</option>`).join('');
+    fillDropSelect();
+  }
+  function fillDropSelect() {
+    const p = Number(pickupSelect.value);
+    let html = '';
+    for (let i = p + 1; i < stops.length; i++) {
+      const free = minFreeSeats(p, i);
+      html += `<option value="${i}" ${free < 1 ? 'disabled' : ''}>${stops[i]}${free < 1 ? ' (full)' : ''}</option>`;
+    }
+    dropSelect.innerHTML = html;
+    updateTripInfo();
+  }
+  function updateTripInfo() {
+    const p = Number(pickupSelect.value), d = Number(dropSelect.value);
+    if (isNaN(d) || minFreeSeats(p, d) < 1) { tripInfo.classList.remove('show'); renderCta(); return; }
+    document.getElementById('infoSeats').textContent = minFreeSeats(p, d) + ' of ' + MAX_SEATS;
+    document.getElementById('infoTime').textContent = timeBetween(p, d) + ' min';
+    document.getElementById('infoFare').textContent = '₦' + fareBetween(p, d);
+    tripInfo.classList.add('show');
+    renderCta();
+  }
+  pickupSelect.addEventListener('change', fillDropSelect);
+  dropSelect.addEventListener('change', updateTripInfo);
+
+  function renderCta() {
+    if (currentTab !== 'passenger') return;
+    ctaWrap.classList.remove('hidden');
+    ctaInner.innerHTML = '';
+    const b = myBooking();
+    if (!b || b.status === 'cancelled') {
+      const p = Number(pickupSelect.value), d = Number(dropSelect.value);
+      const ok = !isNaN(d) && minFreeSeats(p, d) >= 1;
+      const btn = document.createElement('button');
+      btn.className = 'cta'; btn.disabled = !ok;
+      btn.textContent = ok ? 'Request shared ride' : 'Select a valid journey';
+      btn.addEventListener('click', requestRide);
+      ctaInner.appendChild(btn);
+    } else if (b.status === 'waiting') {
+      const btn = document.createElement('button');
+      btn.className = 'cta ghost'; btn.textContent = 'Cancel booking';
+      btn.addEventListener('click', cancelMyBooking);
+      ctaInner.appendChild(btn);
+    } else if (b.status === 'onboard') {
+      ctaWrap.classList.add('hidden');
+    } else if (b.status === 'dropped') {
+      const btn = document.createElement('button');
+      btn.className = 'cta'; btn.textContent = 'Book another ride';
+      btn.addEventListener('click', resetForNewRide);
+      ctaInner.appendChild(btn);
+    }
+  }
+
+  function requestRide() {
+    const p = Number(pickupSelect.value), d = Number(dropSelect.value);
+    if (isNaN(d) || minFreeSeats(p, d) < 1) return;
+    const b = { id: idCounter++, name: 'You', you: true, pickupIdx: p, dropIdx: d, fare: fareBetween(p, d), time: timeBetween(p, d), status: 'waiting' };
+    bookings.push(b);
+    myBookingId = b.id;
+    document.getElementById('overlay').classList.add('show');
+    startSimulation();
+    renderAll();
+  }
+
+  function startSimulation() {
+    clearInterval(simTimer);
+    let spawned = 0;
+    simTimer = setInterval(() => {
+      if (spawned >= demoNames.length) { clearInterval(simTimer); return; }
+      const opts = [];
+      for (let p = 0; p < stops.length - 1; p++) for (let d = p + 1; d < stops.length; d++) if (minFreeSeats(p, d) >= 1) opts.push([p, d]);
+      if (!opts.length) return;
+      const [p, d] = opts[Math.floor(Math.random() * opts.length)];
+      bookings.push({ id: idCounter++, name: demoNames[spawned++], you: false, pickupIdx: p, dropIdx: d, fare: fareBetween(p, d), time: timeBetween(p, d), status: 'waiting' });
+      renderAll();
+    }, 3200);
+  }
+
+  function cancelMyBooking() {
+    const b = myBooking();
+    if (!b || b.status !== 'waiting') return;
+    b.status = 'cancelled';
+    myBookingId = null;
+    tripInfo.classList.remove('show');
+    fillDropSelect();
+    renderAll();
+    switchTab('passenger');
+  }
+  function resetForNewRide() {
+    bookings = bookings.filter(b => !b.you);
+    myBookingId = null;
+    tripInfo.classList.remove('show');
+    fillDropSelect();
+    renderAll();
+    switchTab('passenger');
+  }
+  function markPickedUp(id) { const b = bookings.find(x => x.id === id); if (b && b.status === 'waiting') { b.status = 'onboard'; renderAll(); } }
+  function markDropped(id) { const b = bookings.find(x => x.id === id); if (b && b.status === 'onboard') { b.status = 'dropped'; renderAll(); } }
+  function cancelBookingById(id) {
+    const b = bookings.find(x => x.id === id);
+    if (b && b.status === 'waiting') { b.status = 'cancelled'; if (b.you) { myBookingId = null; tripInfo.classList.remove('show'); fillDropSelect(); } renderAll(); }
+  }
+  function completeTrip() {
+    if (bookings.some(b => b.status === 'waiting' || b.status === 'onboard')) return;
+    tripCompleted = true; renderAll();
+  }
+
+  function renderPassengerTripCard() {
+    const b = myBooking(); if (!b) return;
+    document.getElementById('tvRoute').textContent = stops[b.pickupIdx] + ' → ' + stops[b.dropIdx];
+    document.getElementById('tvPickup').textContent = 'Board at: ' + stops[b.pickupIdx];
+    const map = {
+      waiting: { text: 'Waiting for pickup', cls: 'status-waiting' },
+      onboard: { text: 'On board — heading to ' + stops[b.dropIdx], cls: 'status-full' },
+      dropped: { text: 'Dropped off — trip complete', cls: 'status-ready' },
+    };
+    const st = map[b.status] || map.waiting;
+    document.getElementById('statusBadge').className = 'status-badge ' + st.cls;
+    document.getElementById('statusText').textContent = st.text;
+    document.getElementById('myFare').textContent = '₦' + b.fare;
+    const others = bookings.filter(x => !x.you && (x.status === 'waiting' || x.status === 'onboard')).length;
+    document.getElementById('shareNote').textContent = others > 0 ? `Sharing this keke with ${others} other passenger${others > 1 ? 's' : ''}` : 'No other passengers matched yet';
+    const summary = document.getElementById('tripSummary');
+    summary.classList.toggle('show', b.status === 'dropped');
+    if (b.status === 'dropped') { document.getElementById('sumDest').textContent = stops[b.dropIdx]; document.getElementById('sumTime').textContent = b.time + ' min'; document.getElementById('sumFare').textContent = '₦' + b.fare; }
+  }
+
+  function paxRow(b) {
+    let statusLabel = '', actions = '';
+    if (b.status === 'waiting') { statusLabel = 'Waiting pickup'; actions = `<button class="mini-btn pick" data-act="pick" data-id="${b.id}">Picked up</button><button class="mini-btn cancel" data-act="cancel" data-id="${b.id}">Cancel</button>`; }
+    else if (b.status === 'onboard') { statusLabel = 'On board'; actions = `<button class="mini-btn drop" data-act="drop" data-id="${b.id}">Dropped off</button>`; }
+    else { statusLabel = 'Dropped off ✓'; }
+    return `<div class="pax-row"><div class="pax-info"><div class="pax-name">${b.name}${b.you ? ' (You)' : ''}</div><div class="pax-route">${stops[b.pickupIdx]} → ${stops[b.dropIdx]} · ₦${b.fare}</div><div class="pax-status ${b.status}">${statusLabel}</div></div><div class="pax-actions">${actions}</div></div>`;
+  }
+
+  function renderDriverView() {
+    const onboardCount = bookings.filter(b => b.status === 'onboard').length;
+    const waitingCount = bookings.filter(b => b.status === 'waiting').length;
+    const doneCount = bookings.filter(b => b.status === 'dropped').length;
+    let summary;
+    if (tripCompleted) summary = { text: 'Trip completed', cls: 'status-ready' };
+    else if (!bookings.length) summary = { text: 'Waiting for passengers', cls: 'status-waiting' };
+    else if (onboardCount + waitingCount === 0) summary = { text: 'All dropped off — ready to complete', cls: 'status-ready' };
+    else summary = { text: `${onboardCount} on board · ${waitingCount} waiting · ${doneCount} dropped`, cls: onboardCount >= MAX_SEATS ? 'status-full' : 'status-waiting' };
+    document.getElementById('dvStatusText').textContent = summary.text;
+    document.getElementById('dvStatusBadge').className = 'status-badge ' + summary.cls;
+
+    document.getElementById('stopList').innerHTML = stops.map((name, s) => {
+      const boarding = bookings.filter(b => b.status === 'waiting' && b.pickupIdx === s);
+      const alighting = bookings.filter(b => b.status === 'onboard' && b.dropIdx === s);
+      const seatsNote = s < stops.length - 1 ? `${seatsFreeForSection(s)}/${MAX_SEATS} free after here` : 'end of route';
+      let body = '';
+      if (boarding.length) body += `<div class="pax-sub">Board here</div>` + boarding.map(paxRow).join('');
+      if (alighting.length) body += `<div class="pax-sub">Alight here</div>` + alighting.map(paxRow).join('');
+      if (!body) body = `<div class="empty-note">Nothing to do at this stop</div>`;
+      return `<div class="stop-card"><div class="stop-head"><span>${s + 1}. ${name}</span><span class="seats-note">${seatsNote}</span></div>${body}</div>`;
+    }).join('');
+
+    const canComplete = !tripCompleted && bookings.length > 0 && onboardCount === 0 && waitingCount === 0;
+    const btn = document.getElementById('completeTripBtn');
+    btn.disabled = !canComplete;
+    btn.textContent = tripCompleted ? 'Trip completed' : (onboardCount + waitingCount > 0 ? 'Complete trip (passengers remain)' : 'Complete trip');
+  }
+  document.getElementById('stopList') === null; // noop guard removed below via delegation on main
+  document.querySelector('main').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-act]'); if (!btn) return;
+    const id = Number(btn.dataset.id);
+    if (btn.dataset.act === 'pick') markPickedUp(id);
+    else if (btn.dataset.act === 'drop') markDropped(id);
+    else if (btn.dataset.act === 'cancel') cancelBookingById(id);
+  });
+  document.getElementById('completeTripBtn').addEventListener('click', completeTrip);
+
+  function renderFareList() {
+    document.getElementById('fareList').innerHTML = sectionFares.map((f, i) =>
+      `<div class="fare-row-admin"><div class="seg">${stops[i]} → ${stops[i + 1]}<div class="seg-sub">${sectionTimes[i]} min demo estimate</div></div><div class="fare-input-wrap"><span>₦</span><input type="number" min="0" step="10" value="${f}" data-idx="${i}" class="fareInput"></div></div>`
+    ).join('');
+  }
+  document.getElementById('saveFaresBtn').addEventListener('click', () => {
+    pendingFares = Array.from(document.querySelectorAll('.fareInput')).map(inp => Number(inp.value) || 0);
+    document.getElementById('fareDiff').innerHTML = sectionFares.map((old, i) =>
+      `<div><span>${stops[i]} → ${stops[i + 1]}</span><span>₦${old} → ₦${pendingFares[i]}</span></div>`
+    ).join('');
+    document.getElementById('fareOverlay').classList.add('show');
+  });
+  document.getElementById('cancelFareBtn').addEventListener('click', () => document.getElementById('fareOverlay').classList.remove('show'));
+  document.getElementById('confirmFareBtn').addEventListener('click', () => {
+    sectionFares = pendingFares;
+    effectiveDate = new Date().toLocaleString();
+    document.getElementById('effectiveNote').innerHTML = `Fares last updated — effective <b>${effectiveDate}</b>`;
+    document.getElementById('fareOverlay').classList.remove('show');
+    renderFareList();
+    fillDropSelect();
+  });
+
+  function renderAll() {
+    bookingView.classList.toggle('hidden', currentTab !== 'passenger' || !!myBooking());
+    tripView.classList.toggle('hidden', currentTab !== 'passenger' || !myBooking());
+    if (myBooking()) renderPassengerTripCard();
+    renderCta();
+    if (currentTab === 'driver') renderDriverView();
+  }
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabPassenger').classList.toggle('active', tab === 'passenger');
+    document.getElementById('tabDriver').classList.toggle('active', tab === 'driver');
+    document.getElementById('tabAdmin').classList.toggle('active', tab === 'admin');
+    driverView.classList.toggle('hidden', tab !== 'driver');
+    adminView.classList.toggle('hidden', tab !== 'admin');
+    ctaWrap.classList.toggle('hidden', tab !== 'passenger');
+    renderAll();
+  }
+  document.getElementById('tabPassenger').addEventListener('click', () => switchTab('passenger'));
+  document.getElementById('tabDriver').addEventListener('click', () => switchTab('driver'));
+  document.getElementById('tabAdmin').addEventListener('click', () => switchTab('admin'));
+  document.getElementById('closeSheet').addEventListener('click', () => { document.getElementById('overlay').classList.remove('show'); renderAll(); });
+
+  renderRouteStrip();
+  fillPickupSelect();
+  renderFareList();
+  renderAll();
+</script>
+</body>
+</html>
